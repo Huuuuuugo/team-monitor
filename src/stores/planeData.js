@@ -336,7 +336,7 @@ export const usePlaneDataStore = defineStore('planeData', {
             )
 
             const list = (Array.isArray(data) ? data : [])
-                .filter(activity => activity.field === 'state')
+                .filter(activity => activity.field)
                 .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
             if (getPlaneSlug() !== slug) return list

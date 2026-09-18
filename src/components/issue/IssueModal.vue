@@ -75,6 +75,28 @@
                     </v-col>
                 </v-row>
 
+                <template v-if="todayChanges.length">
+                    <v-divider class="my-5" />
+
+                    <div class="text-subtitle-2 font-weight-bold mb-3">Alterações de hoje</div>
+
+                    <div
+                        v-for="change in todayChanges"
+                        :key="change.id"
+                        class="change-row"
+                    >
+                        <v-icon size="15" class="change-row__icon">
+                            {{ activityFieldIcon(change.field) }}
+                        </v-icon>
+
+                        <div class="change-row__text">
+                            <strong class="change-row__actor">{{ actorName(change) }}</strong>
+                            {{ activityActionLabel(change.field, change.old_value, change.new_value) }}
+                            <span class="change-row__time">· {{ formatTime(change.created_at) }}</span>
+                        </div>
+                    </div>
+                </template>
+
                 <v-divider class="my-5" />
 
                 <div class="text-subtitle-2 font-weight-bold mb-2">Descrição</div>
@@ -126,9 +148,10 @@ import { usePlaneDataStore } from '../../stores/planeData.js'
 import { useUiStore } from '../../stores/ui.js'
 import IssuePriorityChip from './IssuePriorityChip.vue'
 import MemberAvatar from '../member/MemberAvatar.vue'
-import { getDueDate, isOverdue } from '../../utils/issueHelpers.js'
-import { formatDate, formatDateTime, formatRelative, memberName } from '../../utils/formatters.js'
+import { getDueDate, isOverdue, localDateKey, today } from '../../utils/issueHelpers.js'
+import { formatDate, formatDateTime, formatRelative, formatTime, memberName } from '../../utils/formatters.js'
 import { STATE_GROUP_TONES } from '../../utils/priorityColors.js'
+import { activityActionLabel, activityFieldIcon } from '../../utils/activityHelpers.js'
 
 export default {
     name: 'IssueModal',
@@ -185,9 +208,20 @@ export default {
             return DOMPurify.sanitize(html)
         },
 
-        stateActivities() {
+        issueActivities() {
             if (!this.selectedIssue) return []
             return this.activitiesMap[this.selectedIssue.id] || []
+        },
+
+        todayChanges() {
+            const day = today()
+            return this.issueActivities.filter(
+                activity => localDateKey(activity.created_at) === day
+            )
+        },
+
+        stateActivities() {
+            return this.issueActivities.filter(activity => activity.field === 'state')
         },
     },
 
@@ -204,7 +238,10 @@ export default {
         formatDate,
         formatDateTime,
         formatRelative,
+        formatTime,
         memberName,
+        activityActionLabel,
+        activityFieldIcon,
 
         memberKey(member) {
             return member.member?.id || member.id || memberName(member)
@@ -250,5 +287,43 @@ export default {
 
 .issue-modal__toolbar {
     background: transparent !important;
+}
+
+.change-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 6px;
+    background: rgba(var(--v-theme-on-surface), 0.03);
+    margin-bottom: 6px;
+}
+
+.change-row:last-child {
+    margin-bottom: 0;
+}
+
+.change-row__icon {
+    color: rgba(var(--v-theme-on-surface), 0.45);
+    margin-top: 2px;
+    flex: 0 0 auto;
+}
+
+.change-row__text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(var(--v-theme-on-surface), 0.75);
+    overflow-wrap: anywhere;
+}
+
+.change-row__actor {
+    color: rgb(var(--v-theme-on-surface));
+    font-weight: 700;
+}
+
+.change-row__time {
+    color: rgba(var(--v-theme-on-surface), 0.45);
+    font-size: 12px;
+    white-space: nowrap;
 }
 </style>

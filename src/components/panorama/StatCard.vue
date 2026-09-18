@@ -3,7 +3,21 @@
         <div class="d-flex align-center justify-space-between">
             <div class="min-width-0">
                 <div class="stat-card__value">{{ value }}</div>
-                <div class="stat-card__label">{{ label }}</div>
+                <div class="stat-card__label d-flex align-center ga-1">
+                    <span>{{ label }}</span>
+                    <v-tooltip v-if="hint" :text="hint" location="top" max-width="320">
+                        <template #activator="{ props }">
+                            <v-icon
+                                v-bind="props"
+                                size="15"
+                                class="stat-card__hint"
+                                :aria-label="`O que é ${label}`"
+                            >
+                                mdi-help-circle-outline
+                            </v-icon>
+                        </template>
+                    </v-tooltip>
+                </div>
             </div>
             <div class="stat-card__icon" :class="`text-${color}`">
                 <v-icon size="22">{{ icon }}</v-icon>
@@ -21,6 +35,7 @@ export default {
         label: { type: String, required: true },
         icon: { type: String, default: 'mdi-chart-box-outline' },
         color: { type: String, default: 'primary' },
+        hint: { type: String, default: '' },
     },
 }
 </script>
@@ -47,5 +62,15 @@ export default {
     display: grid;
     place-items: center;
     background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.stat-card__hint {
+    color: rgba(var(--v-theme-on-surface), 0.35);
+    cursor: help;
+    transition: color 0.15s ease;
+}
+
+.stat-card__hint:hover {
+    color: rgba(var(--v-theme-on-surface), 0.7);
 }
 </style>

@@ -9,6 +9,7 @@
                     label="Issues abertas"
                     icon="mdi-clipboard-text-outline"
                     color="primary"
+                    :hint="hints.openIssues"
                 />
             </v-col>
             <v-col cols="12" sm="6" md="3">
@@ -17,6 +18,7 @@
                     label="Atrasadas"
                     icon="mdi-alert-circle-outline"
                     color="error"
+                    :hint="hints.overdue"
                 />
             </v-col>
             <v-col cols="12" sm="6" md="3">
@@ -25,6 +27,7 @@
                     label="Concluídas hoje"
                     icon="mdi-check-circle-outline"
                     color="success"
+                    :hint="hints.completedToday"
                 />
             </v-col>
             <v-col cols="12" sm="6" md="3">
@@ -33,6 +36,7 @@
                     label="Projetos ativos"
                     icon="mdi-folder-multiple-outline"
                     color="info"
+                    :hint="hints.projects"
                 />
             </v-col>
         </v-row>
@@ -40,7 +44,21 @@
         <v-row class="mt-2">
             <v-col cols="12" md="6">
                 <v-card variant="flat" class="pa-4 h-100">
-                    <div class="text-subtitle-1 font-weight-bold mb-3">Progresso por projeto</div>
+                    <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center ga-2">
+                        <span>Progresso por projeto</span>
+                        <v-tooltip :text="hints.projectProgress" location="top" max-width="340">
+                            <template #activator="{ props }">
+                                <v-icon
+                                    v-bind="props"
+                                    size="16"
+                                    class="section-hint"
+                                    aria-label="O que é Progresso por projeto"
+                                >
+                                    mdi-help-circle-outline
+                                </v-icon>
+                            </template>
+                        </v-tooltip>
+                    </div>
                     <v-skeleton-loader v-if="loading && !projectProgress.length" type="list-item-two-line@4" />
                     <div v-else-if="!projectProgress.length" class="text-body-2 text-medium-emphasis">
                         Nenhum projeto carregado.
@@ -58,7 +76,21 @@
 
             <v-col cols="12" md="6">
                 <v-card variant="flat" class="pa-4 h-100">
-                    <div class="text-subtitle-1 font-weight-bold mb-3">Carga por membro</div>
+                    <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center ga-2">
+                        <span>Carga por membro</span>
+                        <v-tooltip :text="hints.workload" location="top" max-width="340">
+                            <template #activator="{ props }">
+                                <v-icon
+                                    v-bind="props"
+                                    size="16"
+                                    class="section-hint"
+                                    aria-label="O que é Carga por membro"
+                                >
+                                    mdi-help-circle-outline
+                                </v-icon>
+                            </template>
+                        </v-tooltip>
+                    </div>
                     <v-skeleton-loader v-if="loading && !workload.length" type="list-item-two-line@4" />
                     <div v-else-if="!workload.length" class="text-body-2 text-medium-emphasis">
                         Nenhuma issue aberta atribuída.
@@ -93,6 +125,23 @@ export default {
         MemberWorkload,
         PageHeader,
     },
+
+    data: () => ({
+        hints: {
+            openIssues:
+                'Tarefas que não estão concluídas nem canceladas (backlog, a fazer e em andamento).',
+            overdue:
+                'Tarefas abertas com prazo (due_date ou target_date) já vencido. Tarefas concluídas ou canceladas não entram, mesmo com prazo vencido.',
+            completedToday:
+                'Tarefas com estado do grupo "concluído" cuja última modificação (updated_at) foi hoje. Usa a data de atualização, não o horário exato da mudança de estado.',
+            projects:
+                'Projetos em que o usuário da API do Plane é membro. Não considera atividade, tarefas ou status do projeto.',
+            projectProgress:
+                'Percentual de conclusão de todas as tarefas do projeto. O total inclui tarefas concluídas, canceladas e em aberto; a barra mostra quantas estão concluídas. Projetos sem tarefas não aparecem.',
+            workload:
+                'Quantidade de tarefas abertas por responsável (backlog, a fazer e em andamento). Não inclui concluídas nem canceladas. Tarefas com mais de um responsável contam para cada um, e a barra é relativa ao membro com mais tarefas.',
+        },
+    }),
 
     computed: {
         ...mapState(usePlaneDataStore, [
@@ -149,3 +198,15 @@ export default {
     },
 }
 </script>
+
+<style scoped>
+.section-hint {
+    color: rgba(var(--v-theme-on-surface), 0.35);
+    cursor: help;
+    transition: color 0.15s ease;
+}
+
+.section-hint:hover {
+    color: rgba(var(--v-theme-on-surface), 0.7);
+}
+</style>

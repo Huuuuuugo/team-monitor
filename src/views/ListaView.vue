@@ -5,82 +5,72 @@
             subtitle="Todas as issues com filtros, ordenação e paginação"
         />
 
-        <v-card variant="flat" class="pa-3 mb-4 sticky-filters">
-            <v-row dense align="center">
-                <v-col cols="12" md="4">
-                    <v-text-field
-                        v-model="filters.search"
-                        label="Buscar por título, descrição ou #"
-                        prepend-inner-icon="mdi-magnify"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        clearable
-                    />
-                </v-col>
+        <v-card variant="flat" class="pa-3 mb-4 sticky-filters lista-filters">
+            <v-text-field
+                v-model="filters.search"
+                label="Buscar por título, descrição ou #"
+                prepend-inner-icon="mdi-magnify"
+                variant="outlined"
+                density="compact"
+                hide-details
+                clearable
+                class="mb-3"
+            />
 
-                <v-col cols="12" sm="6" md="2">
-                    <v-select
-                        v-model="filters.projectId"
-                        :items="projectItems"
-                        label="Projeto"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        clearable
-                    />
-                </v-col>
+            <div class="d-flex flex-wrap align-center ga-2">
+                <v-select
+                    v-model="filters.projectId"
+                    :items="projectItems"
+                    label="Projeto"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    class="lista-filters__select"
+                />
 
-                <v-col cols="12" sm="6" md="2">
-                    <v-select
-                        v-model="filters.memberId"
-                        :items="memberItems"
-                        label="Responsável"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        clearable
-                    />
-                </v-col>
+                <v-select
+                    v-model="filters.memberId"
+                    :items="memberItems"
+                    label="Responsável"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    class="lista-filters__select"
+                />
 
-                <v-col cols="12" sm="6" md="2">
-                    <v-select
-                        v-model="filters.stateName"
-                        :items="stateItems"
-                        label="Estado"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        clearable
-                    />
-                </v-col>
+                <v-select
+                    v-model="filters.stateName"
+                    :items="stateItems"
+                    label="Estado"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    class="lista-filters__select"
+                />
 
-                <v-col cols="12" sm="6" md="1">
-                    <v-select
-                        v-model="filters.priority"
-                        :items="priorityItems"
-                        label="Prioridade"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        clearable
-                    />
-                </v-col>
+                <v-select
+                    v-model="filters.priority"
+                    :items="priorityItems"
+                    label="Prioridade"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    class="lista-filters__select"
+                />
 
-                <v-col cols="12" md="1" class="d-flex justify-end">
-                    <v-tooltip text="Limpar filtros" location="top">
-                        <template #activator="{ props }">
-                            <v-btn
-                                v-bind="props"
-                                icon="mdi-filter-off-outline"
-                                variant="text"
-                                aria-label="Limpar filtros"
-                                @click="resetFilters"
-                            />
-                        </template>
-                    </v-tooltip>
-                </v-col>
-            </v-row>
+                <v-btn
+                    icon="mdi-filter-off-outline"
+                    variant="text"
+                    class="ml-auto"
+                    title="Limpar filtros"
+                    aria-label="Limpar filtros"
+                    @click="resetFilters"
+                />
+            </div>
         </v-card>
 
         <v-card variant="flat">
@@ -312,5 +302,19 @@ export default {
     position: sticky;
     top: 76px;
     z-index: 5;
+}
+
+.lista-filters__select {
+    flex: 1 1 190px;
+    min-width: 160px;
+}
+
+.lista-filters :deep(.v-field__input),
+.lista-filters :deep(.v-label.v-field-label) {
+    font-size: 13px;
+}
+
+.lista-filters :deep(.v-label.v-field-label--floating) {
+    font-size: 12px;
 }
 </style>
