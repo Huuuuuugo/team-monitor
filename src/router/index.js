@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import HojeView from '../views/HojeView.vue'
 import EmAndamentoView from '../views/EmAndamentoView.vue'
 import PanoramaView from '../views/PanoramaView.vue'
@@ -15,7 +15,7 @@ const routes = [
 ]
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHashHistory(),
     routes,
     scrollBehavior() {
         return { top: 0 }

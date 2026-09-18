@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
+    base: '/team-monitor/',
     plugins: [vue()],
     resolve: {
         alias: {
@@ -22,7 +23,7 @@ export default defineConfig({
     server: {
         proxy: {
             '/plane': {
-                target: 'http://13.59.73.0:3000',
+                target: 'https://team.monitor.omarcosmaluf.com',
                 changeOrigin: true,
             },
         },
