@@ -1,11 +1,57 @@
-const RAW_SLUG = typeof window !== 'undefined' ? window.PLANE_SLUG : null
-const SLUG = RAW_SLUG && RAW_SLUG !== '__PLANE_SLUG__'
-    ? RAW_SLUG
-    : (import.meta.env.VITE_PLANE_SLUG || 'main')
 const PROXY_BASE = import.meta.env.VITE_PROXY_BASE || ''
+const ASSETS_BASE = import.meta.env.VITE_ASSETS_BASE || ''
+const SLUG_STORAGE_KEY = 'tm-plane-slug'
+
+const SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]*$/i
+
+export function isValidSlug(slug) {
+    if (!slug || slug === '__PLANE_SLUG__') return false
+    return SLUG_PATTERN.test(String(slug).trim())
+}
+
+function normalizeSlug(slug) {
+    if (!isValidSlug(slug)) return ''
+    return String(slug).trim()
+}
+
+function storedSlug() {
+    try {
+        return normalizeSlug(localStorage.getItem(SLUG_STORAGE_KEY))
+    } catch {
+        return ''
+    }
+}
+
+function initialSlug() {
+    return storedSlug()
+        || normalizeSlug(typeof window !== 'undefined' ? window.PLANE_SLUG : '')
+        || normalizeSlug(import.meta.env.VITE_PLANE_SLUG)
+        || 'main'
+}
+
+let currentSlug = initialSlug()
+
+export function getPlaneSlug() {
+    return currentSlug
+}
+
+export function setPlaneSlug(slug) {
+    const normalized = normalizeSlug(slug)
+    if (normalized) currentSlug = normalized
+    try {
+        localStorage.setItem(SLUG_STORAGE_KEY, currentSlug)
+    } catch (err) {
+        console.warn('Não foi possível persistir o slug:', err)
+    }
+    return currentSlug
+}
+
+export function workspacesBase() {
+    return `${PROXY_BASE}/plane/api/v1/workspaces`
+}
 
 export function apiBase() {
-    return `${PROXY_BASE}/plane/api/v1/workspaces/${SLUG}`
+    return `${workspacesBase()}/${currentSlug}`
 }
 
 export function toProxyUrl(absoluteUrl) {
@@ -20,7 +66,9 @@ export function toProxyUrl(absoluteUrl) {
 export function assetUrl(path) {
     if (!path) return ''
     if (/^https?:\/\//i.test(path)) return path
-    return `${PROXY_BASE}/plane${path.startsWith('/') ? path : `/${path}`}`
+    const normalized = path.startsWith('/') ? path : `/${path}`
+    if (ASSETS_BASE) return `${ASSETS_BASE}${normalized}`
+    return `${PROXY_BASE}/plane${normalized}`
 }
 
 const MAX_RETRIES = 3

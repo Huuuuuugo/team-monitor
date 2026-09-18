@@ -1,8 +1,8 @@
 <template>
     <v-tooltip :text="displayName" location="top">
         <template #activator="{ props }">
-            <v-avatar v-bind="props" :size="size" :color="avatarUrl ? undefined : color" class="member-avatar">
-                <v-img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" cover />
+            <v-avatar v-bind="props" :size="size" :color="showImage ? undefined : color" class="member-avatar">
+                <v-img v-if="showImage" :src="avatarUrl" :alt="displayName" cover @error="imageFailed = true" />
                 <v-icon v-else-if="!member" size="16">mdi-account-off-outline</v-icon>
                 <span v-else class="text-caption font-weight-medium">{{ initials(displayName) }}</span>
             </v-avatar>
@@ -24,6 +24,10 @@ export default {
         size: { type: [Number, String], default: 32 },
     },
 
+    data: () => ({
+        imageFailed: false,
+    }),
+
     computed: {
         displayName() {
             if (!this.member) return 'Sem responsável'
@@ -34,11 +38,21 @@ export default {
             return assetUrl(memberAvatar(this.member))
         },
 
+        showImage() {
+            return Boolean(this.avatarUrl) && !this.imageFailed
+        },
+
         color() {
             const name = this.displayName || ''
             let hash = 0
             for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) % 997
             return PALETTE[hash % PALETTE.length]
+        },
+    },
+
+    watch: {
+        avatarUrl() {
+            this.imageFailed = false
         },
     },
 

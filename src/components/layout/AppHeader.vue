@@ -24,6 +24,26 @@
             />
         </div>
 
+        <div class="topbar__slug">
+            <v-select
+                :model-value="planeSlug"
+                :items="slugOptions"
+                item-title="title"
+                item-value="value"
+                prepend-inner-icon="mdi-domain"
+                placeholder="Workspace"
+                title="Workspace do Plane"
+                aria-label="Workspace do Plane"
+                variant="solo-filled"
+                density="compact"
+                rounded="lg"
+                flat
+                hide-details
+                :menu-props="{ maxHeight: 320 }"
+                @update:model-value="onSlugChange"
+            />
+        </div>
+
         <v-spacer />
 
         <div v-if="lastFetchAt" class="topbar__updated d-none d-md-flex">
@@ -85,7 +105,7 @@
 import { mapState, mapActions } from 'pinia'
 import { usePlaneDataStore } from '../../stores/planeData.js'
 import { useUiStore } from '../../stores/ui.js'
-import { formatTime } from '../../utils/formatters.js'
+import { formatTime, slugLabel } from '../../utils/formatters.js'
 
 export default {
     name: 'AppHeader',
@@ -97,11 +117,15 @@ export default {
     }),
 
     computed: {
-        ...mapState(usePlaneDataStore, ['loading', 'lastFetchAt', 'partialErrors']),
-        ...mapState(useUiStore, ['theme', 'listFilters']),
+        ...mapState(usePlaneDataStore, ['loading', 'lastFetchAt', 'partialErrors', 'error']),
+        ...mapState(useUiStore, ['theme', 'listFilters', 'planeSlug', 'planeSlugs']),
 
         effectiveTheme() {
             return this.$vuetify.theme.global.name
+        },
+
+        slugOptions() {
+            return this.planeSlugs.map(slug => ({ title: slugLabel(slug), value: slug }))
         },
     },
 
@@ -115,10 +139,32 @@ export default {
     },
 
     methods: {
-        ...mapActions(usePlaneDataStore, ['refresh']),
-        ...mapActions(useUiStore, ['setTheme', 'showSnackbar']),
+        ...mapActions(usePlaneDataStore, ['refresh', 'switchSlug']),
+        ...mapActions(useUiStore, ['setTheme', 'showSnackbar', 'setPlaneSlug', 'resetListFilters', 'closeModal']),
 
         formatTime,
+
+        async onSlugChange(value) {
+            const raw = value && typeof value === 'object' ? (value.value ?? value.slug ?? '') : value
+            const slug = String(raw || '').trim()
+            if (!slug || slug === this.planeSlug) return
+
+            const previous = this.planeSlug
+            this.setPlaneSlug(slug)
+            this.resetListFilters()
+            this.closeModal()
+
+            await this.switchSlug(slug)
+
+            if (this.error) {
+                this.showSnackbar(`Workspace "${slugLabel(slug)}" indisponível. Voltando para "${slugLabel(previous)}".`, 'error')
+                this.setPlaneSlug(previous)
+                await this.switchSlug(previous)
+                return
+            }
+
+            this.showSnackbar(`Dados carregados para o workspace "${slugLabel(slug)}".`, 'success')
+        },
 
         submitSearch() {
             const term = (this.search || '').trim()
@@ -170,6 +216,31 @@ export default {
 .topbar__search :deep(.v-field__input) {
     font-size: 13px;
     min-height: 40px;
+}
+
+.topbar__slug {
+    flex: 0 1 210px;
+    width: 210px;
+    min-width: 140px;
+}
+
+.topbar__slug :deep(.v-field) {
+    background: rgba(var(--v-theme-on-surface), 0.05);
+}
+
+.topbar__slug :deep(.v-field__input) {
+    font-size: 13px;
+    min-height: 40px;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+@media (max-width: 600px) {
+    .topbar__slug {
+        flex-basis: 130px;
+        width: 130px;
+        min-width: 110px;
+    }
 }
 
 .topbar__updated {

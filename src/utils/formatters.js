@@ -74,6 +74,24 @@ export function memberAvatar(member) {
     return source.avatar_url || source.avatar || ''
 }
 
+const SLUG_LABELS = {
+    main: 'Main',
+    comercial: 'Comercial',
+    governanca: 'Governança',
+    marketing: 'Marketing',
+}
+
+export function slugLabel(slug) {
+    if (!slug) return ''
+    const key = String(slug).trim().toLowerCase()
+    if (SLUG_LABELS[key]) return SLUG_LABELS[key]
+    return key
+        .split(/[-_]/)
+        .filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ')
+}
+
 export function initials(name) {
     if (!name) return '?'
     const parts = name.trim().split(/\s+/).filter(Boolean)
