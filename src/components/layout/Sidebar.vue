@@ -125,7 +125,7 @@ export default {
         },
 
         menuItems() {
-            return [
+            const items = [
                 { to: '/panorama', label: 'Panorama', icon: 'mdi-chart-donut', badge: null },
                 { to: '/kanban', label: 'Kanban', icon: 'mdi-view-column-outline', badge: null },
                 {
@@ -137,6 +137,15 @@ export default {
                         : null,
                 },
             ]
+
+            if (!this.$vuetify.display.lgAndUp) {
+                items.push(
+                    { to: '/status', label: 'Status das tarefas', icon: 'mdi-chart-arc', badge: null },
+                    { to: '/atividades', label: 'Atividades recentes', icon: 'mdi-history', badge: null },
+                )
+            }
+
+            return items
         },
     },
 

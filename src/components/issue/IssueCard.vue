@@ -17,13 +17,9 @@
                     {{ issue._state.name }}
                 </span>
 
-                <v-tooltip v-if="overdue" text="Atrasado" location="top">
-                    <template #activator="{ props }">
-                        <v-icon v-bind="props" color="error" size="15" class="ml-1">
-                            mdi-alert-circle-outline
-                        </v-icon>
-                    </template>
-                </v-tooltip>
+                <v-icon v-if="overdue" color="error" size="15" class="ml-1" title="Atrasado">
+                    mdi-alert-circle-outline
+                </v-icon>
             </div>
 
             <div class="issue-card__title">{{ issue.name }}</div>
@@ -49,25 +45,28 @@
                         :size="24"
                         class="ml-n1"
                     />
-                    <v-tooltip v-if="extraAssignees.length" :text="extraAssigneesText" location="top">
-                        <template #activator="{ props }">
-                            <v-avatar v-bind="props" size="24" color="surface-variant" class="ml-n1">
-                                <span class="text-caption">+{{ extraAssignees.length }}</span>
-                            </v-avatar>
-                        </template>
-                    </v-tooltip>
+                    <v-avatar
+                        v-if="extraAssignees.length"
+                        size="24"
+                        color="surface-variant"
+                        class="ml-n1"
+                        :title="extraAssigneesText"
+                    >
+                        <span class="text-caption">+{{ extraAssignees.length }}</span>
+                    </v-avatar>
                     <span v-if="!assignees.length" class="issue-card__no-assignee">Sem responsável</span>
 
-                    <v-tooltip v-if="issue._state" :text="issue._state.name" location="top">
-                        <template #activator="{ props }">
-                            <span
-                                v-bind="props"
-                                class="issue-card__status"
-                                :style="{ backgroundColor: statusColor }"
-                            ></span>
-                        </template>
-                    </v-tooltip>
+                    <span
+                        v-if="issue._state"
+                        class="issue-card__status"
+                        :style="{ backgroundColor: statusColor }"
+                        :title="issue._state.name"
+                    ></span>
                 </div>
+            </div>
+
+            <div v-if="labels.length" class="issue-card__labels">
+                <LabelChip v-for="label in labels" :key="label.id" :label="label" />
             </div>
         </v-card-text>
     </v-card>
@@ -77,6 +76,7 @@
 import { mapActions } from 'pinia'
 import { useUiStore } from '../../stores/ui.js'
 import IssuePriorityChip from './IssuePriorityChip.vue'
+import LabelChip from './LabelChip.vue'
 import MemberAvatar from '../member/MemberAvatar.vue'
 import { getDueDate, isOverdue, isDueToday } from '../../utils/issueHelpers.js'
 import { formatDate, memberName } from '../../utils/formatters.js'
@@ -87,6 +87,7 @@ export default {
 
     components: {
         IssuePriorityChip,
+        LabelChip,
         MemberAvatar,
     },
 
@@ -146,6 +147,10 @@ export default {
         extraAssigneesText() {
             return this.extraAssignees.map(memberName).join(', ')
         },
+
+        labels() {
+            return this.issue._labels || []
+        },
     },
 
     methods: {
@@ -170,6 +175,8 @@ export default {
     background: rgba(var(--v-theme-on-surface), 0.02);
     border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
     transition: background 0.15s ease, border-color 0.15s ease;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 132px;
 }
 
 .issue-card:hover {
@@ -245,5 +252,12 @@ export default {
     height: 8px;
     border-radius: 50%;
     margin-left: 8px;
+}
+
+.issue-card__labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
 }
 </style>

@@ -137,6 +137,8 @@ export default {
     height: 80px;
     padding: 10px 0;
     border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.04);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 80px;
 }
 
 .timeline-bar {

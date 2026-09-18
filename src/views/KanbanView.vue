@@ -15,9 +15,10 @@
 
         <v-skeleton-loader v-if="loading && !enrichedIssues.length" type="image, article@3" />
 
-        <KanbanBoard v-else-if="activeTab === 'board'" />
-
-        <TimelineBoard v-else />
+        <KeepAlive v-else>
+            <KanbanBoard v-if="activeTab === 'board'" />
+            <TimelineBoard v-else />
+        </KeepAlive>
     </div>
 </template>
 

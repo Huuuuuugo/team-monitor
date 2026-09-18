@@ -4,6 +4,8 @@ import EmAndamentoView from '../views/EmAndamentoView.vue'
 import PanoramaView from '../views/PanoramaView.vue'
 import KanbanView from '../views/KanbanView.vue'
 import ListaView from '../views/ListaView.vue'
+import StatusView from '../views/StatusView.vue'
+import ActivitiesView from '../views/ActivitiesView.vue'
 
 const routes = [
     { path: '/', redirect: '/hoje' },
@@ -12,6 +14,8 @@ const routes = [
     { path: '/panorama', component: PanoramaView, name: 'panorama' },
     { path: '/kanban', component: KanbanView, name: 'kanban' },
     { path: '/lista', component: ListaView, name: 'lista' },
+    { path: '/status', component: StatusView, name: 'status' },
+    { path: '/atividades', component: ActivitiesView, name: 'atividades' },
 ]
 
 const router = createRouter({

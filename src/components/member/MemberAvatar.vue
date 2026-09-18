@@ -1,13 +1,21 @@
 <template>
-    <v-tooltip :text="displayName" location="top">
-        <template #activator="{ props }">
-            <v-avatar v-bind="props" :size="size" :color="showImage ? undefined : color" class="member-avatar">
-                <v-img v-if="showImage" :src="avatarUrl" :alt="displayName" cover @error="imageFailed = true" />
-                <v-icon v-else-if="!member" size="16">mdi-account-off-outline</v-icon>
-                <span v-else class="text-caption font-weight-medium">{{ initials(displayName) }}</span>
-            </v-avatar>
-        </template>
-    </v-tooltip>
+    <v-avatar
+        :size="size"
+        :color="showImage ? undefined : color"
+        :title="displayName"
+        class="member-avatar"
+    >
+        <img
+            v-if="showImage"
+            :src="avatarUrl"
+            :alt="displayName"
+            class="member-avatar__img"
+            loading="lazy"
+            @error="imageFailed = true"
+        />
+        <v-icon v-else-if="!member" size="16">mdi-account-off-outline</v-icon>
+        <span v-else class="text-caption font-weight-medium">{{ initials(displayName) }}</span>
+    </v-avatar>
 </template>
 
 <script>
@@ -61,3 +69,12 @@ export default {
     },
 }
 </script>
+
+<style scoped>
+.member-avatar__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+</style>

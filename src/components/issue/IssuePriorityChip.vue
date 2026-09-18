@@ -1,17 +1,13 @@
 <template>
-    <v-tooltip :text="`Prioridade: ${label}`" location="top">
-        <template #activator="{ props }">
-            <v-chip
-                v-bind="props"
-                size="x-small"
-                variant="flat"
-                class="priority-chip font-weight-medium"
-                :style="toneStyle"
-            >
-                {{ label }}
-            </v-chip>
-        </template>
-    </v-tooltip>
+    <v-chip
+        size="x-small"
+        variant="flat"
+        class="priority-chip font-weight-medium"
+        :style="toneStyle"
+        :title="`Prioridade: ${label}`"
+    >
+        {{ label }}
+    </v-chip>
 </template>
 
 <script>

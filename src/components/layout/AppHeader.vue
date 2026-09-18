@@ -8,7 +8,7 @@
             @click="$emit('toggle-sidebar')"
         />
 
-        <div class="topbar__search">
+        <div v-if="$vuetify.display.mdAndUp" class="topbar__search">
             <v-text-field
                 v-model="search"
                 placeholder="O que você está procurando?"
@@ -24,25 +24,16 @@
             />
         </div>
 
-        <div class="topbar__slug">
-            <v-select
-                :model-value="planeSlug"
-                :items="slugOptions"
-                item-title="title"
-                item-value="value"
-                prepend-inner-icon="mdi-domain"
-                placeholder="Workspace"
-                title="Workspace do Plane"
-                aria-label="Workspace do Plane"
-                variant="solo-filled"
-                density="compact"
-                rounded="lg"
-                flat
-                hide-details
-                :menu-props="{ maxHeight: 320 }"
-                @update:model-value="onSlugChange"
-            />
-        </div>
+        <v-btn
+            v-else
+            icon="mdi-magnify"
+            variant="text"
+            title="Pesquisar"
+            aria-label="Pesquisar"
+            @click="openSearch"
+        />
+
+        <SlugSelect class="topbar__slug d-none d-lg-block" />
 
         <v-spacer />
 
@@ -98,6 +89,32 @@
                 <div class="topbar__user-sub">MMaluf Consultoria</div>
             </div>
         </div>
+
+        <v-dialog v-model="searchOpen" max-width="460" location="top">
+            <v-card class="pa-4">
+                <div class="text-subtitle-1 font-weight-bold mb-3">Pesquisar tarefas</div>
+
+                <v-text-field
+                    v-model="search"
+                    placeholder="O que você está procurando?"
+                    prepend-inner-icon="mdi-magnify"
+                    variant="solo-filled"
+                    density="comfortable"
+                    rounded="lg"
+                    flat
+                    autofocus
+                    hide-details
+                    clearable
+                    @keydown.enter="submitSearch"
+                    @click:clear="clearSearch"
+                />
+
+                <div class="d-flex justify-end ga-2 mt-4">
+                    <v-btn variant="text" @click="searchOpen = false">Cancelar</v-btn>
+                    <v-btn color="primary" variant="flat" @click="submitSearch">Buscar</v-btn>
+                </div>
+            </v-card>
+        </v-dialog>
     </header>
 </template>
 
@@ -105,27 +122,29 @@
 import { mapState, mapActions } from 'pinia'
 import { usePlaneDataStore } from '../../stores/planeData.js'
 import { useUiStore } from '../../stores/ui.js'
-import { formatTime, slugLabel } from '../../utils/formatters.js'
+import SlugSelect from './SlugSelect.vue'
+import { formatTime } from '../../utils/formatters.js'
 
 export default {
     name: 'AppHeader',
+
+    components: {
+        SlugSelect,
+    },
 
     emits: ['toggle-sidebar'],
 
     data: () => ({
         search: '',
+        searchOpen: false,
     }),
 
     computed: {
-        ...mapState(usePlaneDataStore, ['loading', 'lastFetchAt', 'partialErrors', 'error']),
-        ...mapState(useUiStore, ['theme', 'listFilters', 'planeSlug', 'planeSlugs']),
+        ...mapState(usePlaneDataStore, ['loading', 'lastFetchAt', 'partialErrors']),
+        ...mapState(useUiStore, ['theme', 'listFilters']),
 
         effectiveTheme() {
             return this.$vuetify.theme.global.name
-        },
-
-        slugOptions() {
-            return this.planeSlugs.map(slug => ({ title: slugLabel(slug), value: slug }))
         },
     },
 
@@ -139,36 +158,19 @@ export default {
     },
 
     methods: {
-        ...mapActions(usePlaneDataStore, ['refresh', 'switchSlug']),
-        ...mapActions(useUiStore, ['setTheme', 'showSnackbar', 'setPlaneSlug', 'resetListFilters', 'closeModal']),
+        ...mapActions(usePlaneDataStore, ['refresh']),
+        ...mapActions(useUiStore, ['setTheme', 'showSnackbar']),
 
         formatTime,
 
-        async onSlugChange(value) {
-            const raw = value && typeof value === 'object' ? (value.value ?? value.slug ?? '') : value
-            const slug = String(raw || '').trim()
-            if (!slug || slug === this.planeSlug) return
-
-            const previous = this.planeSlug
-            this.setPlaneSlug(slug)
-            this.resetListFilters()
-            this.closeModal()
-
-            await this.switchSlug(slug)
-
-            if (this.error) {
-                this.showSnackbar(`Workspace "${slugLabel(slug)}" indisponível. Voltando para "${slugLabel(previous)}".`, 'error')
-                this.setPlaneSlug(previous)
-                await this.switchSlug(previous)
-                return
-            }
-
-            this.showSnackbar(`Dados carregados para o workspace "${slugLabel(slug)}".`, 'success')
+        openSearch() {
+            this.searchOpen = true
         },
 
         submitSearch() {
             const term = (this.search || '').trim()
             this.listFilters.search = term
+            this.searchOpen = false
             if (this.$route.path !== '/lista') this.$router.push('/lista')
         },
 

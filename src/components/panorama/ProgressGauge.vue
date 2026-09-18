@@ -1,5 +1,5 @@
 <template>
-    <div class="gauge">
+    <div class="gauge" :class="{ 'gauge--plain': plain }">
         <svg viewBox="-22 0 244 132" class="gauge__svg" role="img" aria-label="Distribuição das tarefas por status">
             <path :d="arc" pathLength="100" class="gauge__track" />
 
@@ -129,7 +129,7 @@
             </div>
         </div>
 
-        <div class="gauge__footer">
+        <div v-if="!plain" class="gauge__footer">
             <span>Total: {{ total }} tarefas</span>
             <span class="gauge__needle-label">Ponteiro: {{ completedPercent }}% concluído</span>
         </div>
@@ -199,6 +199,7 @@ export default {
         inProgress: { type: Number, default: 0 },
         backlog: { type: Number, default: 0 },
         cancelled: { type: Number, default: 0 },
+        plain: { type: Boolean, default: false },
     },
 
     data: () => ({
@@ -548,6 +549,11 @@ export default {
     flex-direction: column;
     gap: 6px;
     margin-top: 8px;
+}
+
+.gauge--plain .gauge__legend {
+    gap: 12px;
+    margin-top: 34px;
 }
 
 .gauge__legend-item {

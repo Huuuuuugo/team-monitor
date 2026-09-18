@@ -25,19 +25,19 @@ import requests
 # ----------------------------------------------------------------------
 
 BASE_URL = "https://plane.dokploy.mmcinfra.com"
-WORKSPACE_SLUG = "main"
-API_KEY = "plane_api_592a60298d9445efaab492c9cb93a54f"
+WORKSPACE_SLUG = "governanca"
+API_KEY = "plane_api_a6c083266d1742bc8f4c9e0fb5269fd1"
 
 # Nome do jeito que vai aparecer no Plane (emoji + nome, igual à tela de Etiquetas)
 # Ajuste as cores (hex) se quiser bater 100% com o que você tem hoje.
 LABELS = [
-    {"name": "✨ Feature",         "color": "#F5A623"},
-    {"name": "🎨 Melhoria",        "color": "#F783AC"},
-    {"name": "🐛 Bug",             "color": "#12B76A"},
-    {"name": "🔧 Manutenção",      "color": "#7DD3FC"},
-    {"name": "👤 Suporte/Cliente", "color": "#F97316"},
-    {"name": "🚨 Incidente",       "color": "#E11D48"},
-    {"name": "💥 Não Planejado",   "color": "#94A3B8"},
+    {"name": "📜 Política/Norma",      "color": "#94A3B8"},
+    {"name": "🔍 Auditoria",           "color": "#F783AC"},
+    {"name": "✅ Decisão/Aprovação",   "color": "#12B76A"},
+    {"name": "💥 Não Planejado",       "color": "#F97316"},
+    {"name": "🔄 Revisão Periódica",   "color": "#3B82F6"},
+    {"name": "🔒 Privacidade/SI",      "color": "#F97316"},
+    {"name": "⚠️ Risco",               "color": "#F5A623"},
 ]
 
 # Limite máximo de requisições por minuto (janela deslizante)
@@ -193,4 +193,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()j
+    main()

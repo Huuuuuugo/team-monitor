@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { apiBase, fetchAll, getPlaneSlug, setPlaneSlug } from '../services/planeApi.js'
 import { isCreatedToday, isUpdatedToday, isActive, isOverdue } from '../utils/issueHelpers.js'
 
-const CACHE_KEY_PREFIX = 'tm-plane-cache-v2:'
+const CACHE_KEY_PREFIX = 'tm-plane-cache-v3:'
 const CACHE_TTL_MS = 5 * 60 * 1000
 const MAX_CONCURRENT_TASKS = 32
 
@@ -34,6 +34,7 @@ export const usePlaneDataStore = defineStore('planeData', {
         issues: [],
         states: [],
         members: [],
+        labels: [],
         lastFetchAt: null,
         loading: false,
         error: null,
@@ -42,6 +43,7 @@ export const usePlaneDataStore = defineStore('planeData', {
         stateMap: {},
         memberMap: {},
         projectMap: {},
+        labelMap: {},
         activitiesMap: {},
         loadedSlug: null,
         loadToken: 0,
@@ -53,6 +55,9 @@ export const usePlaneDataStore = defineStore('planeData', {
             _state: state.stateMap[issue.state] || null,
             _project: state.projectMap[issue.project] || null,
             _assignees: (issue.assignees || []).map(id => state.memberMap[id]).filter(Boolean),
+            _labels: (issue.labels || [])
+                .map(label => (label && typeof label === 'object' ? label : state.labelMap[label]))
+                .filter(Boolean),
         })),
 
         openIssues() {
@@ -135,21 +140,35 @@ export const usePlaneDataStore = defineStore('planeData', {
                     if (token !== this.loadToken) return
                     try {
                         let issues
+                        let fallbackLabels = []
                         try {
                             issues = await fetchAll(
-                                `${apiBase()}/projects/${project.id}/issues/?expand=state`
+                                `${apiBase()}/projects/${project.id}/issues/?expand=state,labels`
                             )
                         } catch (err) {
                             issues = await fetchAll(`${apiBase()}/projects/${project.id}/issues/`)
+                            fallbackLabels = await fetchAll(
+                                `${apiBase()}/projects/${project.id}/labels/`
+                            ).catch(() => [])
                         }
 
                         if (token !== this.loadToken) return
 
                         const expandedStates = new Map()
+                        const expandedLabels = new Map()
                         for (const issue of issues) {
                             if (issue.state && typeof issue.state === 'object') {
                                 if (issue.state.id) expandedStates.set(issue.state.id, issue.state)
                                 issue.state = issue.state.id
+                            }
+                            if (Array.isArray(issue.labels)) {
+                                issue.labels = issue.labels.map(label => {
+                                    if (label && typeof label === 'object') {
+                                        if (label.id) expandedLabels.set(label.id, label)
+                                        return label.id
+                                    }
+                                    return label
+                                })
                             }
                         }
 
@@ -165,6 +184,8 @@ export const usePlaneDataStore = defineStore('planeData', {
                             }
                         }
 
+                        const labels = [...fallbackLabels, ...expandedLabels.values()]
+
                         if (token !== this.loadToken) return
 
                         this.issues = [
@@ -172,6 +193,10 @@ export const usePlaneDataStore = defineStore('planeData', {
                             ...issues,
                         ]
                         this.states = [...this.states, ...states]
+                        this.labels = [
+                            ...this.labels.filter(label => label.project !== project.id),
+                            ...labels,
+                        ]
                         this.rebuildMaps()
                     } catch (err) {
                         if (token !== this.loadToken) return
@@ -189,6 +214,7 @@ export const usePlaneDataStore = defineStore('planeData', {
                 const projectIds = new Set(projects.map(project => project.id))
                 this.issues = this.issues.filter(issue => projectIds.has(issue.project))
                 this.states = dedupeById(this.states)
+                this.labels = dedupeById(this.labels)
                 this.rebuildMaps()
                 this.loadedSlug = slug
                 this.lastFetchAt = Date.now()
@@ -223,6 +249,7 @@ export const usePlaneDataStore = defineStore('planeData', {
             this.issues = []
             this.states = []
             this.members = []
+            this.labels = []
             this.lastFetchAt = null
             this.error = null
             this.partialErrors = []
@@ -230,6 +257,7 @@ export const usePlaneDataStore = defineStore('planeData', {
             this.stateMap = {}
             this.memberMap = {}
             this.projectMap = {}
+            this.labelMap = {}
             this.activitiesMap = {}
             this.loadedSlug = null
         },
@@ -237,6 +265,7 @@ export const usePlaneDataStore = defineStore('planeData', {
         rebuildMaps() {
             this.projectMap = Object.fromEntries(this.projects.map(project => [project.id, project]))
             this.stateMap = Object.fromEntries(this.states.map(state => [state.id, state]))
+            this.labelMap = Object.fromEntries(this.labels.map(label => [label.id, label]))
 
             const memberMap = {}
             for (const member of this.members) {
@@ -262,6 +291,7 @@ export const usePlaneDataStore = defineStore('planeData', {
                 this.issues = cache.issues || []
                 this.states = cache.states || []
                 this.members = cache.members || []
+                this.labels = cache.labels || []
                 this.lastFetchAt = cache.lastFetchAt
                 this.loadedSlug = slug
                 this.rebuildMaps()
@@ -279,6 +309,7 @@ export const usePlaneDataStore = defineStore('planeData', {
                     issues: this.issues,
                     states: this.states,
                     members: this.members,
+                    labels: this.labels,
                     lastFetchAt: this.lastFetchAt,
                 }))
             } catch (err) {

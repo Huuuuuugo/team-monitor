@@ -119,6 +119,18 @@
                     </v-chip>
                 </template>
 
+                <template #item.labelNames="{ item }">
+                    <div v-if="item.labelList.length" class="d-flex flex-wrap ga-1">
+                        <LabelChip
+                            v-for="label in item.labelList"
+                            :key="label.id"
+                            :label="label"
+                            size="small"
+                        />
+                    </div>
+                    <span v-else class="text-medium-emphasis">—</span>
+                </template>
+
                 <template #item.priorityOrder="{ item }">
                     <IssuePriorityChip :priority="item.priority" />
                 </template>
@@ -170,6 +182,7 @@ import { mapState, mapActions } from 'pinia'
 import { usePlaneDataStore } from '../stores/planeData.js'
 import { useUiStore } from '../stores/ui.js'
 import IssuePriorityChip from '../components/issue/IssuePriorityChip.vue'
+import LabelChip from '../components/issue/LabelChip.vue'
 import MemberAvatar from '../components/member/MemberAvatar.vue'
 import PageHeader from '../components/layout/PageHeader.vue'
 import { filterIssues, getDueDate, isOverdue, PRIORITY_ORDER } from '../utils/issueHelpers.js'
@@ -181,6 +194,7 @@ export default {
 
     components: {
         IssuePriorityChip,
+        LabelChip,
         MemberAvatar,
         PageHeader,
     },
@@ -220,6 +234,8 @@ export default {
                 stateColor: issue._state?.color || '#9ca3af',
                 priorityOrder: PRIORITY_ORDER[issue.priority] ?? 4,
                 assigneeList: issue._assignees || [],
+                labelList: issue._labels || [],
+                labelNames: (issue._labels || []).map(label => label.name).join(', '),
                 dueDate: getDueDate(issue),
             }))
         },
@@ -230,6 +246,7 @@ export default {
                 { title: 'Projeto', key: 'projectName', width: 170 },
                 { title: 'Título', key: 'name', minWidth: 260 },
                 { title: 'Estado', key: 'stateName', width: 150 },
+                { title: 'Etiqueta', key: 'labelNames', width: 180 },
                 { title: 'Prioridade', key: 'priorityOrder', width: 130 },
                 { title: 'Responsáveis', key: 'assigneeList', sortable: false, width: 130 },
                 { title: 'Prazo', key: 'dueDate', width: 130 },
@@ -247,6 +264,7 @@ export default {
                 dueDate: (a, b) =>
                     String(a.dueDate || '9999-12-31').localeCompare(String(b.dueDate || '9999-12-31')),
                 stateName: (a, b) => String(a.stateName).localeCompare(String(b.stateName), 'pt-BR'),
+                labelNames: (a, b) => String(a.labelNames).localeCompare(String(b.labelNames), 'pt-BR'),
                 projectName: (a, b) => String(a.projectName).localeCompare(String(b.projectName), 'pt-BR'),
                 updated_at: (a, b) => String(a.updated_at).localeCompare(String(b.updated_at)),
                 created_at: (a, b) => String(a.created_at).localeCompare(String(b.created_at)),

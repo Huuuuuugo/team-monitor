@@ -33,11 +33,13 @@
                             Alguns dados não puderam ser carregados: {{ partialErrors.join(' · ') }}
                         </v-alert>
 
+                        <SlugSelect class="d-lg-none mb-5" />
+
                         <router-view />
                     </v-container>
                 </div>
 
-                <AppAside class="app-frame__aside" />
+                <AppAside v-if="$vuetify.display.lgAndUp" class="app-frame__aside" />
             </div>
         </v-main>
 
@@ -70,6 +72,7 @@ import { useUiStore } from './stores/ui.js'
 import Sidebar from './components/layout/Sidebar.vue'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppAside from './components/layout/AppAside.vue'
+import SlugSelect from './components/layout/SlugSelect.vue'
 import IssueModal from './components/issue/IssueModal.vue'
 
 export default {
@@ -79,6 +82,7 @@ export default {
         Sidebar,
         AppHeader,
         AppAside,
+        SlugSelect,
         IssueModal,
     },
 
@@ -193,6 +197,37 @@ export default {
 .tone-card {
     background: rgba(var(--v-theme-on-surface), 0.02) !important;
     border: 1px solid rgba(var(--v-theme-on-surface), 0.08) !important;
+}
+
+html .aside-card {
+    padding: 20px;
+}
+
+.aside-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.aside-card__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--v-theme-on-surface));
+}
+
+.aside-card__menu {
+    color: rgba(var(--v-theme-on-surface), 0.4);
+}
+
+.aside-card__empty {
+    font-size: 12px;
+    color: rgba(var(--v-theme-on-surface), 0.5);
+    padding: 8px 0;
+}
+
+.aside-skeleton {
+    background: transparent;
 }
 
 html .v-card {
