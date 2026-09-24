@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { apiBase, fetchAll, getPlaneSlug, setPlaneSlug } from '../services/planeApi.js'
 import { isCreatedToday, isUpdatedToday, isActive, isOverdue } from '../utils/issueHelpers.js'
 
-const CACHE_KEY_PREFIX = 'tm-plane-cache-v3:'
+const CACHE_KEY_PREFIX = 'tm-plane-cache-v4:'
 const CACHE_TTL_MS = 5 * 60 * 1000
 const MAX_CONCURRENT_TASKS = 32
 
@@ -35,6 +35,7 @@ export const usePlaneDataStore = defineStore('planeData', {
         states: [],
         members: [],
         labels: [],
+        modules: [],
         lastFetchAt: null,
         loading: false,
         error: null,
@@ -44,6 +45,8 @@ export const usePlaneDataStore = defineStore('planeData', {
         memberMap: {},
         projectMap: {},
         labelMap: {},
+        moduleMap: {},
+        moduleIssueMap: {},
         activitiesMap: {},
         loadedSlug: null,
         loadToken: 0,
@@ -98,6 +101,38 @@ export const usePlaneDataStore = defineStore('planeData', {
                 if (item?.name && !seen.has(item.name)) seen.set(item.name, item)
             }
             return [...seen.values()].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'))
+        },
+
+        enrichedModules() {
+            const issueById = new Map(this.enrichedIssues.map(issue => [issue.id, issue]))
+
+            return this.modules.map(module => {
+                const issues = (this.moduleIssueMap[module.id] || [])
+                    .map(id => issueById.get(id))
+                    .filter(Boolean)
+
+                const completed = issues.filter(issue => issue._state?.group === 'completed').length
+                const cancelled = issues.filter(issue => issue._state?.group === 'cancelled').length
+                const lead = module.lead ? this.memberMap[module.lead] || null : null
+                const members = (module.members || [])
+                    .map(id => this.memberMap[id])
+                    .filter(Boolean)
+
+                return {
+                    ...module,
+                    _project: this.projectMap[module.project] || null,
+                    _issues: issues,
+                    _lead: lead,
+                    _members: members,
+                    _total: issues.length,
+                    _completed: completed,
+                    _cancelled: cancelled,
+                    _open: issues.length - completed - cancelled,
+                    _missingDue: !module.target_date,
+                    _missingOwner: !lead && !members.length,
+                    _percent: issues.length ? Math.round((completed / issues.length) * 100) : 0,
+                }
+            })
         },
     },
 
@@ -216,6 +251,87 @@ export const usePlaneDataStore = defineStore('planeData', {
                 this.states = dedupeById(this.states)
                 this.labels = dedupeById(this.labels)
                 this.rebuildMaps()
+
+                this.modules = []
+                this.moduleIssueMap = {}
+
+                const moduleProjects = projects.filter(project => (project.total_modules || 0) > 0)
+
+                if (moduleProjects.length) {
+                    this.progress = {
+                        phase: 'Carregando módulos',
+                        done: 0,
+                        total: moduleProjects.length,
+                    }
+                    let modulesDone = 0
+                    const loadedModules = []
+
+                    await runWithConcurrency(moduleProjects, MAX_CONCURRENT_TASKS, async (project) => {
+                        if (token !== this.loadToken) return
+                        try {
+                            const modules = await fetchAll(
+                                `${apiBase()}/projects/${project.id}/modules/`
+                            )
+                            if (token !== this.loadToken) return
+                            loadedModules.push(...modules)
+                        } catch (err) {
+                            if (token !== this.loadToken) return
+                            this.partialErrors.push(`${project.name} (módulos): ${err.message}`)
+                        } finally {
+                            if (token === this.loadToken) {
+                                modulesDone += 1
+                                this.progress = {
+                                    phase: 'Carregando módulos',
+                                    done: modulesDone,
+                                    total: moduleProjects.length,
+                                }
+                            }
+                        }
+                    })
+
+                    if (token !== this.loadToken) return
+
+                    this.modules = loadedModules
+                    this.progress = {
+                        phase: 'Carregando tarefas dos módulos',
+                        done: 0,
+                        total: loadedModules.length,
+                    }
+                    let linksDone = 0
+                    const moduleIssueMap = {}
+
+                    await runWithConcurrency(loadedModules, MAX_CONCURRENT_TASKS, async (module) => {
+                        if (token !== this.loadToken) return
+                        try {
+                            const issues = await fetchAll(
+                                `${apiBase()}/projects/${module.project}/modules/${module.id}/module-issues/`
+                            )
+                            if (token !== this.loadToken) return
+                            moduleIssueMap[module.id] = issues
+                                .map(issue => issue.id)
+                                .filter(Boolean)
+                        } catch (err) {
+                            if (token !== this.loadToken) return
+                            moduleIssueMap[module.id] = []
+                            this.partialErrors.push(`Módulo ${module.name}: ${err.message}`)
+                        } finally {
+                            if (token === this.loadToken) {
+                                linksDone += 1
+                                this.progress = {
+                                    phase: 'Carregando tarefas dos módulos',
+                                    done: linksDone,
+                                    total: loadedModules.length,
+                                }
+                            }
+                        }
+                    })
+
+                    if (token !== this.loadToken) return
+
+                    this.moduleIssueMap = moduleIssueMap
+                    this.rebuildMaps()
+                }
+
                 this.loadedSlug = slug
                 this.lastFetchAt = Date.now()
                 this.persistCache()
@@ -250,6 +366,7 @@ export const usePlaneDataStore = defineStore('planeData', {
             this.states = []
             this.members = []
             this.labels = []
+            this.modules = []
             this.lastFetchAt = null
             this.error = null
             this.partialErrors = []
@@ -258,6 +375,8 @@ export const usePlaneDataStore = defineStore('planeData', {
             this.memberMap = {}
             this.projectMap = {}
             this.labelMap = {}
+            this.moduleMap = {}
+            this.moduleIssueMap = {}
             this.activitiesMap = {}
             this.loadedSlug = null
         },
@@ -266,6 +385,7 @@ export const usePlaneDataStore = defineStore('planeData', {
             this.projectMap = Object.fromEntries(this.projects.map(project => [project.id, project]))
             this.stateMap = Object.fromEntries(this.states.map(state => [state.id, state]))
             this.labelMap = Object.fromEntries(this.labels.map(label => [label.id, label]))
+            this.moduleMap = Object.fromEntries(this.modules.map(module => [module.id, module]))
 
             const memberMap = {}
             for (const member of this.members) {
@@ -292,6 +412,8 @@ export const usePlaneDataStore = defineStore('planeData', {
                 this.states = cache.states || []
                 this.members = cache.members || []
                 this.labels = cache.labels || []
+                this.modules = cache.modules || []
+                this.moduleIssueMap = cache.moduleIssueMap || {}
                 this.lastFetchAt = cache.lastFetchAt
                 this.loadedSlug = slug
                 this.rebuildMaps()
@@ -310,6 +432,8 @@ export const usePlaneDataStore = defineStore('planeData', {
                     states: this.states,
                     members: this.members,
                     labels: this.labels,
+                    modules: this.modules,
+                    moduleIssueMap: this.moduleIssueMap,
                     lastFetchAt: this.lastFetchAt,
                 }))
             } catch (err) {

@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import { PRIORITY_LABELS, PRIORITY_TONES } from '../../utils/priorityColors.js'
+import { PRIORITY_LABELS, priorityTone } from '../../utils/priorityColors.js'
 
 export default {
     name: 'IssuePriorityChip',
@@ -22,7 +22,7 @@ export default {
 
     computed: {
         tone() {
-            return PRIORITY_TONES[this.priority] || PRIORITY_TONES.none
+            return priorityTone(this.priority, this.$vuetify.theme.current.dark)
         },
 
         toneStyle() {

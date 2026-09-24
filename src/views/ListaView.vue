@@ -104,7 +104,7 @@
                 </template>
 
                 <template #item.stateName="{ item }">
-                    <v-chip size="small" variant="tonal" :color="item.stateColor">
+                    <v-chip size="small" variant="flat" :style="stateTone(item.stateColor)">
                         {{ item.stateName }}
                     </v-chip>
                 </template>
@@ -178,6 +178,7 @@ import PageHeader from '../components/layout/PageHeader.vue'
 import { filterIssues, getDueDate, isOverdue, PRIORITY_ORDER } from '../utils/issueHelpers.js'
 import { formatDate, formatDateTime, formatRelative, memberName } from '../utils/formatters.js'
 import { PRIORITY_LABELS } from '../utils/priorityColors.js'
+import { toneFromColor } from '../utils/colorTones.js'
 
 export default {
     name: 'ListaView',
@@ -277,6 +278,10 @@ export default {
         dueColor(item) {
             if (isOverdue(item)) return 'error'
             return 'success'
+        },
+
+        stateTone(color) {
+            return toneFromColor(color, this.$vuetify.theme.current.dark)
         },
 
         rowProps({ item }) {

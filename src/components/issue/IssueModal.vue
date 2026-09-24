@@ -150,7 +150,7 @@ import IssuePriorityChip from './IssuePriorityChip.vue'
 import MemberAvatar from '../member/MemberAvatar.vue'
 import { getDueDate, isOverdue, localDateKey, today } from '../../utils/issueHelpers.js'
 import { formatDate, formatDateTime, formatRelative, formatTime, memberName } from '../../utils/formatters.js'
-import { STATE_GROUP_TONES } from '../../utils/priorityColors.js'
+import { stateGroupTone } from '../../utils/priorityColors.js'
 import { activityActionLabel, activityFieldIcon } from '../../utils/activityHelpers.js'
 
 export default {
@@ -175,7 +175,7 @@ export default {
         },
 
         stateToneStyle() {
-            const tone = STATE_GROUP_TONES[this.currentState?.group] || STATE_GROUP_TONES.backlog
+            const tone = stateGroupTone(this.currentState?.group, this.$vuetify.theme.current.dark)
             return {
                 backgroundColor: tone.background,
                 color: tone.color,

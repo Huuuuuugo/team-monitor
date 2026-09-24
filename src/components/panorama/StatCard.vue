@@ -5,18 +5,7 @@
                 <div class="stat-card__value">{{ value }}</div>
                 <div class="stat-card__label d-flex align-center ga-1">
                     <span>{{ label }}</span>
-                    <v-tooltip v-if="hint" :text="hint" location="top" max-width="320">
-                        <template #activator="{ props }">
-                            <v-icon
-                                v-bind="props"
-                                size="15"
-                                class="stat-card__hint"
-                                :aria-label="`O que é ${label}`"
-                            >
-                                mdi-help-circle-outline
-                            </v-icon>
-                        </template>
-                    </v-tooltip>
+                    <HintIcon v-if="hint" :text="hint" :size="15" :aria-label="`O que é ${label}`" />
                 </div>
             </div>
             <div class="stat-card__icon" :class="`text-${color}`">
@@ -27,8 +16,14 @@
 </template>
 
 <script>
+import HintIcon from '../common/HintIcon.vue'
+
 export default {
     name: 'StatCard',
+
+    components: {
+        HintIcon,
+    },
 
     props: {
         value: { type: [Number, String], default: 0 },
@@ -64,13 +59,5 @@ export default {
     background: color-mix(in srgb, currentColor 14%, transparent);
 }
 
-.stat-card__hint {
-    color: rgba(var(--v-theme-on-surface), 0.35);
-    cursor: help;
-    transition: color 0.15s ease;
-}
 
-.stat-card__hint:hover {
-    color: rgba(var(--v-theme-on-surface), 0.7);
-}
 </style>

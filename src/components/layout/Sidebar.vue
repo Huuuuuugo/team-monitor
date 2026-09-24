@@ -127,7 +127,9 @@ export default {
         menuItems() {
             const items = [
                 { to: '/panorama', label: 'Panorama', icon: 'mdi-chart-donut', badge: null },
+                { to: '/calendario', label: 'Calendário', icon: 'mdi-calendar-month', badge: null },
                 { to: '/kanban', label: 'Kanban', icon: 'mdi-view-column-outline', badge: null },
+                { to: '/modulos', label: 'Módulos', icon: 'mdi-view-module-outline', badge: null },
                 {
                     to: '/lista',
                     label: 'Lista',

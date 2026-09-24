@@ -1,7 +1,7 @@
 <template>
     <v-card
         class="issue-card mb-2"
-        :class="{ 'issue-card--overdue': overdue }"
+        :class="{ 'issue-card--overdue': overdue, 'issue-card--compact': compact }"
         variant="flat"
         tabindex="0"
         role="button"
@@ -9,7 +9,7 @@
         @keydown.enter.prevent="handleClick"
         @keydown.space.prevent="handleClick"
     >
-        <v-card-text class="pa-3">
+        <v-card-text :class="compact ? 'pa-2' : 'pa-3'">
             <div class="d-flex align-center flex-wrap ga-1 mb-2">
                 <IssuePriorityChip :priority="issue.priority" />
 
@@ -31,13 +31,13 @@
                 </span>
             </div>
 
-            <div class="d-flex align-center justify-space-between mt-3">
+            <div class="issue-card__footer">
                 <div class="issue-card__date" :class="dueClass">
                     <v-icon size="14">mdi-calendar-blank-outline</v-icon>
                     <span>{{ dueDate ? formatDate(dueDate) : 'Sem prazo' }}</span>
                 </div>
 
-                <div class="d-flex align-center">
+                <div class="issue-card__assignees">
                     <MemberAvatar
                         v-for="member in visibleAssignees"
                         :key="memberKey(member)"
@@ -80,7 +80,7 @@ import LabelChip from './LabelChip.vue'
 import MemberAvatar from '../member/MemberAvatar.vue'
 import { getDueDate, isOverdue, isDueToday } from '../../utils/issueHelpers.js'
 import { formatDate, memberName } from '../../utils/formatters.js'
-import { STATE_GROUP_COLORS, STATE_GROUP_TONES } from '../../utils/priorityColors.js'
+import { STATE_GROUP_COLORS, stateGroupTone } from '../../utils/priorityColors.js'
 
 export default {
     name: 'IssueCard',
@@ -95,6 +95,7 @@ export default {
         issue: { type: Object, required: true },
         showProject: { type: Boolean, default: true },
         maxAssignees: { type: Number, default: 3 },
+        compact: { type: Boolean, default: false },
     },
 
     computed: {
@@ -121,7 +122,7 @@ export default {
         },
 
         stateToneStyle() {
-            const tone = STATE_GROUP_TONES[this.issue._state?.group] || STATE_GROUP_TONES.backlog
+            const tone = stateGroupTone(this.issue._state?.group, this.$vuetify.theme.current.dark)
             return {
                 backgroundColor: tone.background,
                 color: tone.color,
@@ -225,12 +226,28 @@ export default {
     align-items: center;
 }
 
+.issue-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 12px;
+    min-width: 0;
+}
+
+.issue-card__assignees {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
 .issue-card__date {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     font-size: 12px;
     color: rgba(var(--v-theme-on-surface), 0.55);
+    white-space: nowrap;
 }
 
 .issue-card__date--error {
@@ -242,12 +259,16 @@ export default {
 }
 
 .issue-card__no-assignee {
+    overflow: hidden;
     font-size: 11px;
     color: rgba(var(--v-theme-on-surface), 0.45);
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .issue-card__status {
     display: inline-block;
+    flex: 0 0 auto;
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -259,5 +280,54 @@ export default {
     flex-wrap: wrap;
     gap: 4px;
     margin-top: 8px;
+}
+
+.issue-card--compact {
+    display: flex;
+    flex-direction: column;
+    height: 164px;
+    overflow: hidden;
+    contain-intrinsic-size: auto 164px;
+}
+
+.issue-card--compact :deep(.v-card-text) {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.issue-card--compact .issue-card__title {
+    font-size: 12px;
+}
+
+.issue-card--compact .issue-card__tag {
+    height: 18px;
+    padding: 0 6px;
+    font-size: 10px;
+}
+
+.issue-card--compact .issue-card__meta {
+    gap: 8px;
+    margin-top: 3px;
+    font-size: 10px;
+}
+
+.issue-card--compact .issue-card__footer {
+    margin-top: auto;
+    padding-top: 8px;
+}
+
+.issue-card--compact .issue-card__date {
+    font-size: 11px;
+}
+
+.issue-card--compact .issue-card__no-assignee {
+    font-size: 10px;
+}
+
+.issue-card--compact .issue-card__labels {
+    gap: 3px;
+    margin-top: 6px;
 }
 </style>

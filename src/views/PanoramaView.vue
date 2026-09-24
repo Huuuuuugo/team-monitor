@@ -46,18 +46,11 @@
                 <v-card variant="flat" class="pa-4 h-100">
                     <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center ga-2">
                         <span>Progresso por projeto</span>
-                        <v-tooltip :text="hints.projectProgress" location="top" max-width="340">
-                            <template #activator="{ props }">
-                                <v-icon
-                                    v-bind="props"
-                                    size="16"
-                                    class="section-hint"
-                                    aria-label="O que é Progresso por projeto"
-                                >
-                                    mdi-help-circle-outline
-                                </v-icon>
-                            </template>
-                        </v-tooltip>
+                        <HintIcon
+                            :text="hints.projectProgress"
+                            :size="16"
+                            aria-label="O que é Progresso por projeto"
+                        />
                     </div>
                     <v-skeleton-loader v-if="loading && !projectProgress.length" type="list-item-two-line@4" />
                     <div v-else-if="!projectProgress.length" class="text-body-2 text-medium-emphasis">
@@ -78,18 +71,11 @@
                 <v-card variant="flat" class="pa-4 h-100">
                     <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center ga-2">
                         <span>Carga por membro</span>
-                        <v-tooltip :text="hints.workload" location="top" max-width="340">
-                            <template #activator="{ props }">
-                                <v-icon
-                                    v-bind="props"
-                                    size="16"
-                                    class="section-hint"
-                                    aria-label="O que é Carga por membro"
-                                >
-                                    mdi-help-circle-outline
-                                </v-icon>
-                            </template>
-                        </v-tooltip>
+                        <HintIcon
+                            :text="hints.workload"
+                            :size="16"
+                            aria-label="O que é Carga por membro"
+                        />
                     </div>
                     <v-skeleton-loader v-if="loading && !workload.length" type="list-item-two-line@4" />
                     <div v-else-if="!workload.length" class="text-body-2 text-medium-emphasis">
@@ -115,6 +101,7 @@ import StatCard from '../components/panorama/StatCard.vue'
 import ProjectProgress from '../components/panorama/ProjectProgress.vue'
 import MemberWorkload from '../components/panorama/MemberWorkload.vue'
 import PageHeader from '../components/layout/PageHeader.vue'
+import HintIcon from '../components/common/HintIcon.vue'
 
 export default {
     name: 'PanoramaView',
@@ -124,6 +111,7 @@ export default {
         ProjectProgress,
         MemberWorkload,
         PageHeader,
+        HintIcon,
     },
 
     data: () => ({
@@ -199,14 +187,4 @@ export default {
 }
 </script>
 
-<style scoped>
-.section-hint {
-    color: rgba(var(--v-theme-on-surface), 0.35);
-    cursor: help;
-    transition: color 0.15s ease;
-}
 
-.section-hint:hover {
-    color: rgba(var(--v-theme-on-surface), 0.7);
-}
-</style>

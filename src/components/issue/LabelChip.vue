@@ -1,9 +1,9 @@
 <template>
     <v-chip
         :size="size"
-        variant="tonal"
+        variant="flat"
         class="label-chip font-weight-medium"
-        :color="color"
+        :style="toneStyle"
         :title="name"
     >
         {{ name }}
@@ -11,6 +11,8 @@
 </template>
 
 <script>
+import { toneFromColor } from '../../utils/colorTones.js'
+
 export default {
     name: 'LabelChip',
 
@@ -26,6 +28,10 @@ export default {
 
         color() {
             return this.label?.color || '#9ca3af'
+        },
+
+        toneStyle() {
+            return toneFromColor(this.color, this.$vuetify.theme.current.dark)
         },
     },
 }

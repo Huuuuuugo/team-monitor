@@ -2,148 +2,78 @@
     <div>
         <PageHeader title="Hoje" :subtitle="todayLabel" class="text-capitalize">
             <template #actions>
-                <v-chip v-if="activitiesLoading" size="small" variant="tonal" color="primary">
+                <v-chip v-if="loading && !enrichedIssues.length" size="small" variant="tonal" color="primary">
                     <v-progress-circular indeterminate size="14" width="2" class="mr-2" />
-                    Carregando histórico...
+                    Carregando...
                 </v-chip>
             </template>
         </PageHeader>
 
-        <v-expansion-panels v-model="openPanels" multiple>
-            <v-expansion-panel>
-                <v-expansion-panel-title>
-                    <div class="d-flex align-center w-100">
-                        <v-icon color="success" class="mr-2">mdi-plus-circle-outline</v-icon>
-                        <span class="font-weight-bold">Criadas hoje</span>
-                        <v-chip size="x-small" variant="tonal" color="success" class="ml-2">
-                            {{ createdToday.length }}
+        <v-card variant="flat" class="tone-card today-block">
+            <div class="today-block__head d-flex align-center flex-wrap ga-2 px-3">
+                <v-tabs v-model="activeTab" density="comfortable" color="primary" class="today-block__tabs">
+                    <v-tab value="progress">
+                        <v-icon size="16" class="mr-2">mdi-progress-clock</v-icon>
+                        Em andamento
+                        <v-chip size="x-small" variant="tonal" class="ml-2">
+                            {{ inProgressToday.length }}
                         </v-chip>
-                    </div>
-                </v-expansion-panel-title>
-                <v-expansion-panel-text>
-                    <v-skeleton-loader v-if="loading && !createdToday.length" type="list-item-two-line@3" />
-                    <div v-else-if="!createdToday.length" class="text-center py-6">
-                        <v-icon size="44" color="medium-emphasis">mdi-check-circle-outline</v-icon>
-                        <div class="text-body-2 text-medium-emphasis mt-2">Nenhuma tarefa criada hoje 🎉</div>
-                    </div>
-                    <IssueCard v-for="issue in createdToday" :key="issue.id" :issue="issue" />
-                </v-expansion-panel-text>
-            </v-expansion-panel>
+                    </v-tab>
+                    <v-tab value="due">
+                        <v-icon size="16" class="mr-2">mdi-calendar-clock</v-icon>
+                        Encerram hoje
+                        <v-chip size="x-small" variant="tonal" class="ml-2">
+                            {{ dueTodayInProgress.length }}
+                        </v-chip>
+                    </v-tab>
+                </v-tabs>
 
-            <v-expansion-panel>
-                <v-expansion-panel-title>
-                    <div class="d-flex align-center w-100">
-                        <v-icon color="info" class="mr-2">mdi-pencil-outline</v-icon>
-                        <span class="font-weight-bold">Modificadas hoje</span>
-                        <v-chip size="x-small" variant="tonal" color="info" class="ml-2">
-                            {{ updatedToday.length }}
-                        </v-chip>
-                    </div>
-                </v-expansion-panel-title>
-                <v-expansion-panel-text>
-                    <v-skeleton-loader v-if="loading && !updatedToday.length" type="list-item-two-line@3" />
-                    <div v-else-if="!updatedToday.length" class="text-center py-6">
-                        <v-icon size="44" color="medium-emphasis">mdi-pencil-off-outline</v-icon>
-                        <div class="text-body-2 text-medium-emphasis mt-2">Nenhuma tarefa modificada hoje.</div>
-                    </div>
-                    <IssueCard v-for="issue in updatedToday" :key="issue.id" :issue="issue" />
-                </v-expansion-panel-text>
-            </v-expansion-panel>
+                <v-spacer />
 
-            <v-expansion-panel>
-                <v-expansion-panel-title>
-                    <div class="d-flex align-center w-100">
-                        <v-icon color="warning" class="mr-2">mdi-swap-horizontal</v-icon>
-                        <span class="font-weight-bold">Mudanças de estado hoje</span>
-                        <v-chip size="x-small" variant="tonal" color="warning" class="ml-2">
-                            {{ stateChanges.length }}
-                        </v-chip>
-                    </div>
-                </v-expansion-panel-title>
-                <v-expansion-panel-text>
-                    <v-skeleton-loader
-                        v-if="activitiesLoading && !stateChanges.length"
-                        type="list-item-two-line@3"
+                <v-btn
+                    v-if="currentIssues.length"
+                    variant="text"
+                    size="small"
+                    :prepend-icon="expanded ? 'mdi-arrow-collapse-vertical' : 'mdi-arrow-expand-vertical'"
+                    @click="expanded = !expanded"
+                >
+                    {{ expanded ? 'Recolher' : 'Expandir' }}
+                </v-btn>
+            </div>
+
+            <v-divider />
+
+            <div class="today-block__body" :class="{ 'today-block__body--expanded': expanded }">
+                <v-skeleton-loader
+                    v-if="loading && !currentIssues.length"
+                    type="list-item-two-line@4"
+                />
+
+                <div v-else-if="!currentIssues.length" class="today-block__empty">
+                    <v-icon size="44" color="medium-emphasis">{{ emptyIcon }}</v-icon>
+                    <div class="text-body-2 text-medium-emphasis mt-2">{{ emptyMessage }}</div>
+                </div>
+
+                <div v-else class="today-block__grid">
+                    <IssueCard
+                        v-for="issue in currentIssues"
+                        :key="issue.id"
+                        :issue="issue"
+                        compact
+                        class="today-card"
                     />
-                    <div v-else-if="!stateChanges.length" class="text-center py-6">
-                        <v-icon size="44" color="medium-emphasis">mdi-swap-horizontal</v-icon>
-                        <div class="text-body-2 text-medium-emphasis mt-2">
-                            Nenhuma mudança de estado registrada hoje.
-                        </div>
-                    </div>
-
-                    <v-card
-                        v-for="change in stateChanges"
-                        :key="change.activity.id"
-                        variant="flat"
-                        class="activity-card mb-2"
-                        tabindex="0"
-                        role="button"
-                        @click="openModal(change.issue)"
-                        @keydown.enter.prevent="openModal(change.issue)"
-                    >
-                        <v-card-text class="pa-3">
-                            <div class="d-flex align-center flex-wrap ga-3">
-                                <div class="flex-grow-1 min-width-0">
-                                    <div class="text-body-2 font-weight-medium">{{ change.issue.name }}</div>
-                                    <div class="text-caption text-medium-emphasis">
-                                        #{{ change.issue.sequence_id }}
-                                        <template v-if="change.issue._project">
-                                            · {{ change.issue._project.name }}
-                                        </template>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex align-center ga-1">
-                                    <v-chip size="small" variant="tonal" :color="stateColor(change.activity.old_value)">
-                                        {{ change.activity.old_value || '—' }}
-                                    </v-chip>
-                                    <v-icon size="16">mdi-arrow-right</v-icon>
-                                    <v-chip size="small" variant="tonal" :color="stateColor(change.activity.new_value)">
-                                        {{ change.activity.new_value || '—' }}
-                                    </v-chip>
-                                </div>
-
-                                <div class="text-caption text-medium-emphasis d-flex align-center ga-1">
-                                    <v-icon size="14">mdi-account-outline</v-icon>
-                                    {{ actorName(change.activity) }} · {{ formatTime(change.activity.created_at) }}
-                                </div>
-                            </div>
-                        </v-card-text>
-                    </v-card>
-                </v-expansion-panel-text>
-            </v-expansion-panel>
-
-            <v-expansion-panel>
-                <v-expansion-panel-title>
-                    <div class="d-flex align-center w-100">
-                        <v-icon color="grey" class="mr-2">mdi-delete-outline</v-icon>
-                        <span class="font-weight-bold">Deletadas hoje</span>
-                        <v-chip size="x-small" variant="tonal" class="ml-2">0</v-chip>
-                    </div>
-                </v-expansion-panel-title>
-                <v-expansion-panel-text>
-                    <v-card variant="tonal" color="grey" class="pa-4 d-flex align-center ga-3">
-                        <v-icon size="32">mdi-information-outline</v-icon>
-                        <div class="text-body-2">
-                            O Plane Community Edition não registra issues deletadas via API. Esta seção
-                            ficará disponível em versões futuras.
-                        </div>
-                    </v-card>
-                </v-expansion-panel-text>
-            </v-expansion-panel>
-        </v-expansion-panels>
+                </div>
+            </div>
+        </v-card>
     </div>
 </template>
 
 <script>
-import { mapState, mapActions } from 'pinia'
+import { mapState } from 'pinia'
 import { usePlaneDataStore } from '../stores/planeData.js'
-import { useUiStore } from '../stores/ui.js'
 import IssueCard from '../components/issue/IssueCard.vue'
 import PageHeader from '../components/layout/PageHeader.vue'
-import { sortByDateDesc, localDateKey, today } from '../utils/issueHelpers.js'
-import { formatTime } from '../utils/formatters.js'
+import { isDueToday } from '../utils/issueHelpers.js'
 
 export default {
     name: 'HojeView',
@@ -154,51 +84,35 @@ export default {
     },
 
     data: () => ({
-        openPanels: [0, 1, 2, 3],
-        activitiesLoading: false,
+        activeTab: 'progress',
+        expanded: false,
     }),
 
     computed: {
-        ...mapState(usePlaneDataStore, [
-            'loading',
-            'createdTodayIssues',
-            'updatedTodayIssues',
-            'touchedTodayIssues',
-            'activitiesMap',
-            'states',
-            'memberMap',
-        ]),
+        ...mapState(usePlaneDataStore, ['loading', 'enrichedIssues']),
 
-        createdToday() {
-            return sortByDateDesc(this.createdTodayIssues, 'created_at')
+        inProgressToday() {
+            return this.enrichedIssues
+                .filter(issue => issue._state?.group === 'started')
+                .sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0))
         },
 
-        updatedToday() {
-            return sortByDateDesc(this.updatedTodayIssues, 'updated_at')
+        dueTodayInProgress() {
+            return this.inProgressToday.filter(isDueToday)
         },
 
-        statesByName() {
-            const map = {}
-            for (const state of this.states) {
-                if (state?.name && !map[state.name]) map[state.name] = state
-            }
-            return map
+        currentIssues() {
+            return this.activeTab === 'due' ? this.dueTodayInProgress : this.inProgressToday
         },
 
-        stateChanges() {
-            const changes = []
-            const day = today()
+        emptyIcon() {
+            return this.activeTab === 'due' ? 'mdi-calendar-check-outline' : 'mdi-progress-clock'
+        },
 
-            for (const issue of this.touchedTodayIssues) {
-                const activities = this.activitiesMap[issue.id] || []
-                for (const activity of activities) {
-                    if (activity.field === 'state' && localDateKey(activity.created_at) === day) {
-                        changes.push({ issue, activity })
-                    }
-                }
-            }
-
-            return changes.sort((a, b) => new Date(b.activity.created_at) - new Date(a.activity.created_at))
+        emptyMessage() {
+            return this.activeTab === 'due'
+                ? 'Nenhuma tarefa em andamento com prazo para hoje.'
+                : 'Nenhuma tarefa em andamento.'
         },
 
         todayLabel() {
@@ -210,56 +124,95 @@ export default {
             })
         },
     },
-
-    watch: {
-        touchedTodayIssues: {
-            immediate: true,
-            handler(list) {
-                if (list.length) this.loadTodayActivities()
-            },
-        },
-    },
-
-    methods: {
-        ...mapActions(useUiStore, ['openModal']),
-        ...mapActions(usePlaneDataStore, ['loadActivitiesForIssues']),
-
-        formatTime,
-
-        async loadTodayActivities() {
-            if (this.activitiesLoading) return
-            this.activitiesLoading = true
-            try {
-                await this.loadActivitiesForIssues(this.touchedTodayIssues)
-            } finally {
-                this.activitiesLoading = false
-            }
-        },
-
-        stateColor(name) {
-            return this.statesByName[name]?.color || 'grey'
-        },
-
-        actorName(activity) {
-            if (activity.actor_detail?.full_name) return activity.actor_detail.full_name
-            const member = this.memberMap[activity.actor]
-            if (!member) return 'Sistema'
-            return member.member?.full_name || member.first_name || member.full_name || 'Membro'
-        },
-    },
 }
 </script>
 
 <style scoped>
-.activity-card {
-    cursor: pointer;
-    background: rgba(var(--v-theme-on-surface), 0.02);
-    border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
-    transition: background 0.15s ease, border-color 0.15s ease;
+.today-block {
+    overflow: hidden;
 }
 
-.activity-card:hover {
-    background: rgba(var(--v-theme-on-surface), 0.06);
-    border-color: rgba(var(--v-theme-on-surface), 0.16);
+.today-block__head {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.today-block__tabs {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.today-block__tabs :deep(.v-tab) {
+    min-width: 0;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.today-block__body {
+    max-height: 392px;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.today-block__body--expanded {
+    max-height: none;
+    overflow-y: visible;
+}
+
+.today-block__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    align-items: start;
+}
+
+.today-block__grid :deep(.issue-card) {
+    margin-bottom: 0 !important;
+}
+
+.today-card {
+    background: color-mix(in srgb, rgb(var(--v-theme-primary)) 8%, rgb(var(--v-theme-surface))) !important;
+}
+
+.today-card:hover {
+    background: color-mix(in srgb, rgb(var(--v-theme-primary)) 14%, rgb(var(--v-theme-surface))) !important;
+}
+
+.v-theme--dark .today-card {
+    background: color-mix(in srgb, rgb(var(--v-theme-primary)) 16%, rgb(var(--v-theme-surface))) !important;
+}
+
+.v-theme--dark .today-card:hover {
+    background: color-mix(in srgb, rgb(var(--v-theme-primary)) 24%, rgb(var(--v-theme-surface))) !important;
+}
+
+.today-block__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+    text-align: center;
+}
+
+@media (max-width: 1279px) {
+    .today-block__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 959px) {
+    .today-block__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 599px) {
+    .today-block__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 </style>
