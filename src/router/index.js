@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import HojeView from '../views/HojeView.vue'
 import EmAndamentoView from '../views/EmAndamentoView.vue'
+import FocoView from '../views/FocoView.vue'
 import PanoramaView from '../views/PanoramaView.vue'
 import CalendarioView from '../views/CalendarioView.vue'
 import KanbanView from '../views/KanbanView.vue'
@@ -13,6 +14,7 @@ const routes = [
     { path: '/', redirect: '/hoje' },
     { path: '/hoje', component: HojeView, name: 'hoje' },
     { path: '/em-andamento', component: EmAndamentoView, name: 'em-andamento' },
+    { path: '/foco', component: FocoView, name: 'foco' },
     { path: '/panorama', component: PanoramaView, name: 'panorama' },
     { path: '/calendario', component: CalendarioView, name: 'calendario' },
     { path: '/kanban', component: KanbanView, name: 'kanban' },

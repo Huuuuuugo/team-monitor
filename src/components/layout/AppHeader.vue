@@ -1,5 +1,5 @@
 <template>
-    <header class="topbar">
+    <v-app-bar flat :height="64" color="background" class="topbar">
         <v-btn
             class="d-md-none"
             icon="mdi-menu"
@@ -8,15 +8,16 @@
             @click="$emit('toggle-sidebar')"
         />
 
+        <SlugSelect class="topbar__slug d-none d-lg-flex" />
+
         <div v-if="$vuetify.display.mdAndUp" class="topbar__search">
             <v-text-field
                 v-model="search"
                 placeholder="O que você está procurando?"
                 prepend-inner-icon="mdi-magnify"
-                variant="solo-filled"
+                variant="outlined"
                 density="compact"
-                rounded="lg"
-                flat
+                rounded="pill"
                 hide-details
                 clearable
                 @keydown.enter="submitSearch"
@@ -24,18 +25,16 @@
             />
         </div>
 
-        <v-btn
-            v-else
-            icon="mdi-magnify"
-            variant="text"
-            title="Pesquisar"
-            aria-label="Pesquisar"
-            @click="openSearch"
-        />
-
-        <SlugSelect class="topbar__slug d-none d-lg-block" />
-
-        <v-spacer />
+        <template v-else>
+            <v-btn
+                icon="mdi-magnify"
+                variant="text"
+                title="Pesquisar"
+                aria-label="Pesquisar"
+                @click="openSearch"
+            />
+            <v-spacer />
+        </template>
 
         <div v-if="lastFetchAt" class="topbar__updated d-none d-md-flex">
             <v-icon size="14">mdi-clock-outline</v-icon>
@@ -74,22 +73,6 @@
             </button>
         </div>
 
-        <v-btn icon variant="text" class="topbar__bell" aria-label="Notificações">
-            <v-badge dot color="primary" offset-x="-2" offset-y="2">
-                <v-icon>mdi-bell-outline</v-icon>
-            </v-badge>
-        </v-btn>
-
-        <div class="topbar__user d-none d-sm-flex">
-            <v-avatar size="32" color="primary">
-                <span class="text-caption font-weight-medium text-white">GB</span>
-            </v-avatar>
-            <div class="topbar__user-name d-none d-md-block">
-                <div class="topbar__user-title">Equipe GB</div>
-                <div class="topbar__user-sub">MMaluf Consultoria</div>
-            </div>
-        </div>
-
         <v-dialog v-model="searchOpen" max-width="460" location="top">
             <v-card class="pa-4">
                 <div class="text-subtitle-1 font-weight-bold mb-3">Pesquisar tarefas</div>
@@ -115,7 +98,7 @@
                 </div>
             </v-card>
         </v-dialog>
-    </header>
+    </v-app-bar>
 </template>
 
 <script>
@@ -193,55 +176,55 @@ export default {
 
 <style scoped>
 .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 6;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: rgba(var(--v-theme-background), 0.85);
-    backdrop-filter: blur(12px);
+    --topbar-control-height: 38px;
     border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.08);
 }
 
+.topbar :deep(.v-toolbar__content) {
+    gap: 8px;
+    padding: 0 20px;
+}
+
 .topbar__search {
-    flex: 1 1 420px;
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    min-width: 140px;
+}
+
+.topbar__search :deep(.v-input) {
+    width: 100%;
     max-width: 420px;
-    min-width: 120px;
 }
 
 .topbar__search :deep(.v-field) {
-    background: rgba(var(--v-theme-on-surface), 0.05);
+    --v-input-control-height: var(--topbar-control-height);
+    height: var(--topbar-control-height);
+    font-size: 13px;
+}
+
+.topbar__search :deep(.v-field__field) {
+    align-items: center;
 }
 
 .topbar__search :deep(.v-field__input) {
     font-size: 13px;
-    min-height: 40px;
+    min-height: calc(var(--topbar-control-height) - 4px);
+    padding-top: 0;
+    padding-bottom: 0;
+    align-items: center;
 }
 
 .topbar__slug {
-    flex: 0 1 210px;
-    width: 210px;
-    min-width: 140px;
+    flex: 0 1 290px;
+    width: 290px;
+    min-width: 190px;
 }
 
-.topbar__slug :deep(.v-field) {
-    background: rgba(var(--v-theme-on-surface), 0.05);
-}
-
-.topbar__slug :deep(.v-field__input) {
-    font-size: 13px;
-    min-height: 40px;
-    padding-top: 0;
-    padding-bottom: 0;
-}
-
-@media (max-width: 600px) {
+@media (max-width: 1280px) {
     .topbar__slug {
-        flex-basis: 130px;
-        width: 130px;
-        min-width: 110px;
+        flex-basis: 240px;
+        width: 240px;
     }
 }
 
@@ -278,29 +261,5 @@ export default {
 .theme-pill__btn--active {
     background: rgba(var(--v-theme-primary), 0.18);
     color: rgb(var(--v-theme-primary));
-}
-
-.topbar__bell {
-    color: rgba(var(--v-theme-on-surface), 0.7);
-}
-
-.topbar__user {
-    align-items: center;
-    gap: 10px;
-    margin-left: 6px;
-    padding-left: 12px;
-    border-left: 1px solid rgba(var(--v-theme-on-surface), 0.08);
-}
-
-.topbar__user-title {
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.2;
-    color: rgb(var(--v-theme-on-surface));
-}
-
-.topbar__user-sub {
-    font-size: 11px;
-    color: rgba(var(--v-theme-on-surface), 0.5);
 }
 </style>

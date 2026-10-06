@@ -72,7 +72,7 @@
 import { mapState } from 'pinia'
 import { usePlaneDataStore } from '../../stores/planeData.js'
 import { useUiStore } from '../../stores/ui.js'
-import { filterIssues } from '../../utils/issueHelpers.js'
+import { filterIssues, isOverdue } from '../../utils/issueHelpers.js'
 import { formatTime } from '../../utils/formatters.js'
 
 export default {
@@ -88,8 +88,8 @@ export default {
         ...mapState(usePlaneDataStore, [
             'lastFetchAt',
             'todayEventCount',
-            'inProgressOverdueIssues',
             'enrichedIssues',
+            'openIssues',
         ]),
         ...mapState(useUiStore, ['listFilters']),
 
@@ -97,8 +97,10 @@ export default {
             return filterIssues(this.enrichedIssues, this.listFilters).length
         },
 
-        inProgressCount() {
-            return this.enrichedIssues.filter(issue => issue._state?.group === 'started').length
+        focusAlertCount() {
+            return this.openIssues.filter(
+                issue => issue.priority === 'urgent' || isOverdue(issue)
+            ).length
         },
 
         featuredItems() {
@@ -112,14 +114,12 @@ export default {
                         : null,
                 },
                 {
-                    to: '/em-andamento',
-                    label: 'Em Andamento',
-                    icon: 'mdi-progress-clock',
-                    badge: this.inProgressOverdueIssues.length
-                        ? { count: this.inProgressOverdueIssues.length, color: 'error' }
-                        : this.inProgressCount
-                            ? { count: this.inProgressCount, color: 'primary' }
-                            : null,
+                    to: '/foco',
+                    label: 'Foco',
+                    icon: 'mdi-target',
+                    badge: this.focusAlertCount
+                        ? { count: this.focusAlertCount, color: 'error' }
+                        : null,
                 },
             ]
         },

@@ -81,15 +81,19 @@ export const useUiStore = defineStore('ui', {
                 console.warn('Não foi possível persistir os slugs:', err)
             }
         },
-        resetListFilters() {
+        setListFilters(filters) {
             this.listFilters = {
                 search: '',
                 projectId: null,
                 memberId: null,
                 stateName: null,
                 priority: null,
+                ...(filters || {}),
             }
             this.listPage = 1
+        },
+        resetListFilters() {
+            this.setListFilters(null)
         },
         showSnackbar(message, color = 'success') {
             this.snackbar = { show: true, message, color }

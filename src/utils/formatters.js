@@ -75,7 +75,7 @@ export function memberAvatar(member) {
 }
 
 const SLUG_LABELS = {
-    main: 'Main',
+    main: 'Tecnologia',
     comercial: 'Comercial',
     governanca: 'Governança',
     marketing: 'Marketing',

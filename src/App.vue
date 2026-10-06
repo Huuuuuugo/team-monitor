@@ -1,12 +1,12 @@
 <template>
     <v-app>
+        <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
+
         <Sidebar v-model="sidebarOpen" />
 
         <v-main>
             <div class="app-frame">
                 <div class="app-frame__content">
-                    <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
-
                     <v-container fluid class="app-container pa-4 pa-md-6">
                         <v-alert
                             v-if="error"
@@ -164,7 +164,7 @@ export default {
 .app-frame {
     display: flex;
     align-items: flex-start;
-    min-height: 100vh;
+    min-height: calc(100vh - 64px);
 }
 
 .app-frame__content {
@@ -182,8 +182,8 @@ export default {
         flex: 0 0 300px;
         width: 300px;
         position: sticky;
-        top: 84px;
-        max-height: calc(100vh - 100px);
+        top: 80px;
+        max-height: calc(100vh - 96px);
         overflow-y: auto;
         padding: 24px 20px 24px 0;
     }
